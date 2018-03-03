@@ -1,0 +1,51 @@
+#+TITLE: README for gcalsync
+* Purpose
+The purpose of this tools is retrieve calendar events from a range of google calendars and generate an org-mode file to be included into it's agenda view.
+* Installation
+With a working golang tool chain the easiest way is to install using:
+#+BEGIN_SRC sh
+go get -u github.com/lchausmann/gcalsync
+#+END_SRC
+* Configuration
+The tool is configured by creating a configuration: *$HOME/.gcalsync.yaml*
+
+The content of the file is:
+#+BEGIN_EXAMPLE
+#
+# Format for an entry:
+# personal:
+#   tokenfile:
+#   calendars:
+#     <Tag>: <calendarid>
+#     <Tag2>: <2calendarid>
+#   titlefilters:
+#     - Standup
+#     - Status Report
+#   orgfile: ~/private/org/calendar/cal-personal.org
+
+<identifier>:
+  tokenfile: ~/.gcalsync/personal_secret.json
+  tagname: Personal
+  calendars:
+    Personal: <your calendarid>
+    Thor: <next calenarid>
+  titlefilters:
+    - Standup
+    - Status Report
+  orgfile: ~/private/org/calendar/cal-personal.org
+
+#+END_EXAMPLE
+
+The can be multiple stanzas in the configuration file.
+* Usage
+Run the tool after installation by:
+#+BEGIN_SRC sh
+gcalsync fetch <identifier>
+#+END_SRC
+
+The first run will prompt you to obtain a Oauth token from Google. Subsequent runs can completed using cron.
+
+* Pending Todos
+** TODO Better documentation
+** TODO Multi-architecture releases
+** TODO Improved documentation

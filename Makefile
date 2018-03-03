@@ -161,7 +161,7 @@ setup: clean
 	go get github.com/wadey/gocovmerge
 	go get golang.org/x/tools/cmd/goimports
 	go get github.com/mitchellh/gox
-	go get github.com/goreleaser/goreleaser
+	go get -u github.com/goreleaser/goreleaser
 
 VERSION          := $(shell git describe --tags --always --dirty="-dev")
 DATE             := $(shell date -u '+%Y-%m-%d-%H:%M UTC')
