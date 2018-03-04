@@ -1,6 +1,9 @@
 #+TITLE: README for gcalsync
 * Purpose
 The purpose of this tools is retrieve calendar events from a range of google calendars and generate an org-mode file to be included into it's agenda view.
+
+The backbone of this code is inspired from: [[https://github.com/codemac/gcalorg][codemac/gcalorg]].
+
 * Installation
 With a working golang tool chain the easiest way is to install using:
 #+BEGIN_SRC sh
