@@ -89,7 +89,6 @@ func loadCalendarFromConfig(calendar string) (Calendar, error) {
 		return c, errors.New("No calendar is specified")
 	}
 
-	fmt.Fprintf(os.Stderr, "Returning: %v", c)
 	return c, nil
 }
 
@@ -105,9 +104,6 @@ var fetchCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		fmt.Println("fetch called")
-
 		calendar := args[0]
 
 		cal, err := loadCalendarFromConfig(calendar)
@@ -115,22 +111,18 @@ var fetchCmd = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "Cannot find calendar stanza for calendar: %s in configuration - error %v", calendar, err)
 			os.Exit(1)
 		}
-		fmt.Fprintf(os.Stderr, "Working on %v", cal)
-
-		fmt.Fprintf(os.Stderr, "Getting client for: %s using tokens in %s", cal.name, cal.tokenfile)
 		cl := genClient(cal.tokenfile)
 		strBuilder := printCalendars(cl, cal)
 		if len(cal.orgfile) == 0 || cal.orgfile == "-" {
 			fmt.Println(strBuilder.String())
 		} else {
 			// Write to org file
-			fmt.Fprintf(os.Stderr, "Writing agenda to %s", cal.orgfile)
+			fmt.Fprintf(os.Stderr, "Writing agenda to %s\n", cal.orgfile)
 			if err := ioutil.WriteFile(cal.orgfile, []byte(strBuilder.String()), 0644); err != nil {
 				fmt.Fprintf(os.Stderr, "Error writing to %s - %v", cal.orgfile, err)
 				os.Exit(1)
 			}
 		}
-
 	},
 }
 
