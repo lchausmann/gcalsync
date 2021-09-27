@@ -86,11 +86,11 @@ clean-dist:
 
 test:
 	@echo "Testing..."
-	$Q go test $(if $V,-v) -i -race $(allpackages) # install -race libs to speed up next run
+	$Q go test $(if $V,-v) $(allpackages) # install -race libs to speed up next run
 ifndef CI
 	@echo "Testing Outside CI..."
 	$Q go vet $(allpackages)
-	$Q GODEBUG=cgocheck=2 go test -race $(allpackages)
+	$Q GODEBUG=cgocheck=2 go test $(allpackages)
 else
 	@echo "Testing in CI..."
 	$Q mkdir -p test

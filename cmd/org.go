@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lchausmann/gcalsync/pkg/config"
 	"google.golang.org/api/calendar/v3"
 )
 
@@ -57,6 +58,11 @@ func printOrgDate(start, end *calendar.EventDateTime) string {
 	ts, _ := time.Parse(time.RFC3339, start.DateTime)
 	ts = ts.In(time.Local)
 	tsf := ts.Format("2006-01-02 Mon 15:04")
+
+	if time.Now().Before(ts) {
+		final = final + "SCHEDULED: "
+	}
+
 	final = final + fmt.Sprintf("<%s", tsf)
 
 	if end == nil {
@@ -101,6 +107,8 @@ func printOrg(e *calendar.Event, tagname string, out *strings.Builder) {
 	//	summary += " :" + tagname + ":"
 	// }
 	fullentry += fmt.Sprintf("%s\n", summary)
+
+	fullentry += fmt.Sprintf("%s\n", printOrgDate(e.Start, e.End))
 	fullentry += fmt.Sprintf(":PROPERTIES:\n")
 	fullentry += fmt.Sprintf(":ID:       %s\n", e.ICalUID)
 	fullentry += fmt.Sprintf(":GCALLINK: %s\n", e.HtmlLink)
@@ -111,7 +119,6 @@ func printOrg(e *calendar.Event, tagname string, out *strings.Builder) {
 		fullentry += fmt.Sprintf(":ORGANIZER: [[mailto:%s][%s]]\n", e.Organizer.Email, cleanString(e.Organizer.DisplayName))
 	}
 	fullentry += fmt.Sprintf(":END:\n\n")
-	fullentry += fmt.Sprintf("%s\n", printOrgDate(e.Start, e.End))
 	attendees := e.Attendees
 	canonical_id := func(ea *calendar.EventAttendee) string {
 		if ea.Id != "" {
@@ -197,12 +204,12 @@ func printOrg(e *calendar.Event, tagname string, out *strings.Builder) {
 	}
 }
 
-func printCalendars(client *http.Client, cal Calendar) *strings.Builder {
+func printCalendars(client *http.Client, cal config.CalendarConfig) *strings.Builder {
 
 	calendarMap := map[string]string{}
 
 	approvedCals := []string{}
-	for _, v := range cal.calendars {
+	for _, v := range cal.Calendars {
 		approvedCals = append(approvedCals, v.Calendar)
 		calendarMap[v.Calendar] = v.Tag
 	}
@@ -283,7 +290,7 @@ func printCalendars(client *http.Client, cal Calendar) *strings.Builder {
 			// manage those for now. There is probably a way of
 			// getting them, but converting the ical format to the
 			// org format would be a significant piece of logic)
-			for _, v := range cal.titlefilters {
+			for _, v := range cal.TitleFilters {
 				if strings.Contains(i.Summary, v) {
 					continue itemloop
 				}

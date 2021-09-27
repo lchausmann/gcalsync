@@ -19,78 +19,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/user"
-	"path/filepath"
-	"strings"
 
+	"github.com/lchausmann/gcalsync/pkg/config"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
-
-type CalendarMap struct {
-	Tag      string
-	Calendar string
-}
-
-type Calendar struct {
-	name         string
-	tokenfile    string
-	tagname      string
-	calendars    []CalendarMap
-	titlefilters []string
-	orgfile      string
-}
-
-func loadCalendarFromConfig(calendar string) (Calendar, error) {
-	c := Calendar{}
-	c.name = calendar
-	v := viper.Sub(calendar)
-	// Check correct length of configuration
-
-	if len(v.AllKeys()) < 4 {
-		return c, fmt.Errorf("Incorrect configuration - expected 5 items, got: %d", len(v.AllKeys()))
-	}
-
-	if tokenFile := v.GetString("tokenfile"); len(tokenFile) > 0 {
-		if tokenFile[:2] == "~/" {
-			usr, _ := user.Current()
-			dir := usr.HomeDir
-			c.tokenfile = filepath.Join(dir, tokenFile[2:])
-		} else {
-			c.tokenfile = tokenFile
-		}
-
-	} else {
-		return c, errors.New("tokenfile not specificied")
-	}
-
-	c.orgfile = v.GetString("orgfile")
-
-	if len(c.orgfile) > 0 && c.orgfile[:2] == "~/" {
-		usr, _ := user.Current()
-		dir := usr.HomeDir
-		c.orgfile = filepath.Join(dir, c.orgfile[2:])
-	}
-
-	// Tag be optional
-	if tagname := v.GetString("tagname"); len(tagname) > 0 {
-		c.tagname = tagname
-	}
-
-	c.calendars = []CalendarMap{}
-	for k, v := range v.GetStringMap("calendars") {
-		c.calendars = append(c.calendars, CalendarMap{Tag: strings.ToUpper(k), Calendar: v.(string)})
-	}
-
-	c.titlefilters = v.GetStringSlice("titlefilters")
-
-	// validate configuration
-	if len(c.calendars) < 1 {
-		return c, errors.New("No calendar is specified")
-	}
-
-	return c, nil
-}
 
 // fetchCmd represents the fetch command
 var fetchCmd = &cobra.Command{
@@ -106,20 +38,20 @@ var fetchCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		calendar := args[0]
 
-		cal, err := loadCalendarFromConfig(calendar)
+		cal, err := config.LoadCalendarFromConfig(calendar)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Cannot find calendar stanza for calendar: %s in configuration - error %v", calendar, err)
 			os.Exit(1)
 		}
-		cl := genClient(cal.tokenfile)
+		cl := genClient(cal.TokenFile)
 		strBuilder := printCalendars(cl, cal)
-		if len(cal.orgfile) == 0 || cal.orgfile == "-" {
+		if len(cal.OrgFile) == 0 || cal.OrgFile == "-" {
 			fmt.Println(strBuilder.String())
 		} else {
 			// Write to org file
-			fmt.Fprintf(os.Stderr, "Writing agenda to %s\n", cal.orgfile)
-			if err := ioutil.WriteFile(cal.orgfile, []byte(strBuilder.String()), 0644); err != nil {
-				fmt.Fprintf(os.Stderr, "Error writing to %s - %v", cal.orgfile, err)
+			fmt.Fprintf(os.Stderr, "Writing agenda to %s\n", cal.OrgFile)
+			if err := ioutil.WriteFile(cal.OrgFile, []byte(strBuilder.String()), 0644); err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing to %s - %v", cal.OrgFile, err)
 				os.Exit(1)
 			}
 		}
